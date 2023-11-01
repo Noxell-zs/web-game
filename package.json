@@ -11,10 +11,12 @@
     "serve": "http-server"
   },
   "dependencies": {
-    "gl-matrix": "^3.4.3"
+    "gl-matrix": "^3.4.3",
+    "jquery": "^3.6.1"
   },
   "devDependencies": {
     "@types/node": "^17.0.30",
+    "@types/jquery": "^3.5.14",
     "@webgpu/types": "^0.1.15",
     "http-server": "^14.1.0",
     "ts-loader": "^9.2.9",

@@ -1,7 +1,10 @@
 import shader from "./shaders/shaders.wgsl";
 import { TriangleMesh } from "./triangle_mesh";
 import { mat4 } from "gl-matrix";
-import {canvasHeight, canvasWidth} from "./window_size";
+import { Material } from "./material";
+import { Camera } from "../model/camera";
+import { Triangle } from "../model/triangle";
+import {canvasHeight, canvasWidth} from "../window_size";
 
 export class Renderer {
 
@@ -20,25 +23,20 @@ export class Renderer {
 
     // Assets
     triangleMesh: TriangleMesh;
-
-    //a little dodgy but let's do this for not
-    t: number = 0.0;
+    material: Material;
 
 
     constructor(canvas: HTMLCanvasElement){
         this.canvas = canvas;
-        this.t = 0.0;
     }
 
-    async Initialize() {
+   async Initialize() {
 
         await this.setupDevice();
 
-        this.createAssets();
-    
-        await this.makePipeline();
+        await this.createAssets();
 
-        this.render();
+        await this.makePipeline();
     }
 
     async setupDevice() {
@@ -73,11 +71,21 @@ export class Renderer {
                     binding: 0,
                     visibility: GPUShaderStage.VERTEX,
                     buffer: {}
-                }
+                },
+                // {
+                //     binding: 1,
+                //     visibility: GPUShaderStage.FRAGMENT,
+                //     texture: {}
+                // },
+                // {
+                //     binding: 2,
+                //     visibility: GPUShaderStage.FRAGMENT,
+                //     sampler: {}
+                // },
             ]
 
         });
-    
+
         this.bindGroup = this.device.createBindGroup({
             layout: bindGroupLayout,
             entries: [
@@ -86,14 +94,22 @@ export class Renderer {
                     resource: {
                         buffer: this.uniformBuffer
                     }
-                }
+                },
+                // {
+                //     binding: 1,
+                //     resource: this.material.view
+                // },
+                // {
+                //     binding: 2,
+                //     resource: this.material.sampler
+                // }
             ]
         });
-        
+
         const pipelineLayout = this.device.createPipelineLayout({
             bindGroupLayouts: [bindGroupLayout]
         });
-    
+
         this.pipeline = this.device.createRenderPipeline({
             vertex : {
                 module : this.device.createShaderModule({
@@ -102,7 +118,7 @@ export class Renderer {
                 entryPoint : "vs_main",
                 buffers: [this.triangleMesh.bufferLayout,]
             },
-    
+
             fragment : {
                 module : this.device.createShaderModule({
                     code : shader
@@ -112,52 +128,34 @@ export class Renderer {
                     format : this.format
                 }]
             },
-    
+
             primitive : {
                 topology : "triangle-list"
             },
-    
+
             layout: pipelineLayout
         });
 
     }
 
-    createAssets() {
+    async createAssets() {
         this.triangleMesh = new TriangleMesh(this.device);
+
+        // this.material = new Material();
+        // await this.material.initialize(this.device, "dist/img/chat.jpg");
     }
 
-    render = () => {
-        
-        this.t += 0.01;
-        if (this.t > 2.0 * Math.PI) {
-            this.t -= 2.0 * Math.PI;
-        }
-        
+    async render(camera: Camera, triangles: Triangle[]) {
+
 
         //make transforms
         const projection = mat4.create();
-        // load perspective projection into the projection matrix,
-        // Field of view = 45 degrees (pi/4)
-        // Aspect ratio = 800/600
-        // near = 0.1, far = 10 
         mat4.perspective(projection, Math.PI/4, canvasWidth/canvasHeight, 0.1, 10);
 
-        const view = mat4.create();
-        //load lookat matrix into the view matrix,
-        //looking from [-2, 0, 2]
-        //looking at [0, 0, 0]
-        //up vector is [0, 0, 1]
-        mat4.lookAt(view, [-2, 0, 2], [0, 0, 0], [0, 0, 1]);
+        const view = camera.get_view();
 
-        const model = mat4.create();
-        //Store, in the model matrix, the model matrix after rotating it by t radians around the z axis.
-        //(yeah, I know, kinda weird.)
-        mat4.rotate(model, model, this.t, [0,0,1]);
-        
-
-        this.device.queue.writeBuffer(this.uniformBuffer, 0, <ArrayBuffer>model); 
-        this.device.queue.writeBuffer(this.uniformBuffer, 64, <ArrayBuffer>view); 
-        this.device.queue.writeBuffer(this.uniformBuffer, 128, <ArrayBuffer>projection); 
+        this.device.queue.writeBuffer(this.uniformBuffer, 64, <ArrayBuffer>view);
+        this.device.queue.writeBuffer(this.uniformBuffer, 128, <ArrayBuffer>projection);
 
         //command encoder: records draw commands for submission
         const commandEncoder : GPUCommandEncoder = this.device.createCommandEncoder();
@@ -172,16 +170,22 @@ export class Renderer {
                 storeOp: "store"
             }]
         });
-        
+
         renderpass.setPipeline(this.pipeline);
         renderpass.setVertexBuffer(0, this.triangleMesh.buffer);
-        renderpass.setBindGroup(0, this.bindGroup);
-        renderpass.draw(3, 1, 0, 0);
+        triangles.forEach((triangle) => {
+
+            const model =  triangle.get_model();
+
+            this.device.queue.writeBuffer(this.uniformBuffer, 0, <ArrayBuffer>model);
+            renderpass.setBindGroup(0, this.bindGroup);
+            renderpass.draw(3, 1, 0, 0);
+
+        });
         renderpass.end();
-    
+
         this.device.queue.submit([commandEncoder.finish()]);
 
-        requestAnimationFrame(this.render);
     }
-    
+
 }
