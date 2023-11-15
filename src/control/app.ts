@@ -50,8 +50,8 @@ export class App {
         this.scene.move_player(this.forwards_amount, this.right_amount);
 
         this.renderer.render(
-            this.scene.get_player(),
-            this.scene.get_triangles()
+            this.scene.get_renderables(),
+            this.scene.player
         );
 
         if (running) {
@@ -91,7 +91,7 @@ export class App {
 
     handle_mouse_move(event: MouseEvent) {
         this.scene.spin_player(
-            event.movementX / 5, event.movementY / -5
+            event.movementX / 5, event.movementY / 5
         );
     }
 }
