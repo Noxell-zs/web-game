@@ -1,9 +1,8 @@
 import { Renderer } from "../view/renderer";
 import { Scene } from "../model/scene";
-import $ from "jquery";
+import {CanvasManager} from "./canvas-manager";
 
 export class App {
-
     canvas: HTMLCanvasElement;
     renderer: Renderer;
     scene: Scene;
@@ -11,41 +10,41 @@ export class App {
     forwards_amount: number;
     right_amount: number;
     
-    constructor(canvas: HTMLCanvasElement) {
-        this.canvas = canvas;
+    constructor(canvasManager: CanvasManager) {
+        this.canvas = canvasManager.canvas;
 
-        this.renderer = new Renderer(canvas);
+        this.renderer = new Renderer(canvasManager);
         this.renderer.Initialize();
 
         this.scene = new Scene();
 
         this.forwards_amount = 0;
         this.right_amount = 0;
-        $(document).on(
-            "keydown", 
-            (event) => {
-                this.handle_keypress(event);
-            }
+
+        document.addEventListener(
+            "keydown",
+            (event) => this.handleKeypress(event.key),
+            false,
         );
-        $(document).on(
-            "keyup", 
-            (event) => {
-                this.handle_keyrelease(event);
-            }
+
+        document.addEventListener(
+            "keyup",
+            (event) => this.handleKeyrelease(event.key),
+            false,
         );
+
         this.canvas.onclick = () => {
             this.canvas.requestPointerLock();
         }
         this.canvas.addEventListener(
             "mousemove", 
-            (event: MouseEvent) => {this.handle_mouse_move(event);}
+            (event: MouseEvent) => this.handle_mouse_move(event)
         );
         
     }
 
     run = () => {
-
-        var running: boolean = true;
+        let running: boolean = true;
 
         this.scene.update();
         this.scene.move_player(this.forwards_amount, this.right_amount);
@@ -60,36 +59,34 @@ export class App {
         }
     }
 
-    handle_keypress(event: JQuery.KeyDownEvent) {
-        if (event.code == "KeyW") {
-            this.forwards_amount = 0.02;
+    handleKeypress(key: string) {
+        switch (key) {
+            case 'w':
+                this.forwards_amount = 0.02;
+                break;
+            case 's':
+                this.forwards_amount = -0.02;
+                break;
+            case 'a':
+                this.right_amount = -0.02;
+                break;
+            case 'd':
+                this.right_amount = 0.02;
+                break;
         }
-        if (event.code == "KeyS") {
-            this.forwards_amount = -0.02;
-        }
-        if (event.code == "KeyA") {
-            this.right_amount = -0.02;
-        }
-        if (event.code == "KeyD") {
-            this.right_amount = 0.02;
-        }
-
     }
 
-    handle_keyrelease(event: JQuery.KeyUpEvent) {
-        if (event.code == "KeyW") {
-            this.forwards_amount = 0;
+    handleKeyrelease(key: string) {
+        switch (key) {
+            case 'w':
+            case 's':
+                this.forwards_amount = 0;
+                break;
+            case 'a':
+            case 'd':
+                this.right_amount = 0;
+                break;
         }
-        if (event.code == "KeyS") {
-            this.forwards_amount = 0;
-        }
-        if (event.code == "KeyA") {
-            this.right_amount = 0;
-        }
-        if (event.code == "KeyD") {
-            this.right_amount = 0;
-        }
-
     }
 
     handle_mouse_move(event: MouseEvent) {
@@ -97,5 +94,4 @@ export class App {
             event.movementX / 5, event.movementY / -5
         );
     }
-
 }

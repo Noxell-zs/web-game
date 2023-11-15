@@ -54,8 +54,8 @@ export class Scene {
 
     move_player(forwards_amount: number, right_amount: number) {
         vec3.scaleAndAdd(
-            this.player.position, this.player.position, 
-            this.player.forwards, forwards_amount
+            this.player.position, this.player.position,
+            this.player.baseForwards, forwards_amount
         );
 
         vec3.scaleAndAdd(

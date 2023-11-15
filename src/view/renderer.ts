@@ -4,11 +4,11 @@ import { mat4 } from "gl-matrix";
 import { Material } from "./material";
 import { Camera } from "../model/camera";
 import { Triangle } from "../model/triangle";
-import {canvasHeight, canvasWidth} from "../window_size";
+import {CanvasManager} from "../control/canvas-manager";
 
 export class Renderer {
-
     canvas: HTMLCanvasElement;
+    canvasManager: CanvasManager;
 
     // Device/Context objects
     adapter: GPUAdapter;
@@ -26,12 +26,12 @@ export class Renderer {
     material: Material;
 
 
-    constructor(canvas: HTMLCanvasElement){
-        this.canvas = canvas;
+    constructor(canvasManager: CanvasManager){
+        this.canvas = canvasManager.canvas;
+        this.canvasManager = canvasManager;
     }
 
-   async Initialize() {
-
+    async Initialize() {
         await this.setupDevice();
 
         await this.createAssets();
@@ -40,7 +40,6 @@ export class Renderer {
     }
 
     async setupDevice() {
-
         //adapter: wrapper around (physical) GPU.
         //Describes features and limits
         this.adapter = <GPUAdapter> await navigator.gpu?.requestAdapter();
@@ -146,11 +145,11 @@ export class Renderer {
     }
 
     async render(camera: Camera, triangles: Triangle[]) {
-
+        if (!this.device) return;
 
         //make transforms
         const projection = mat4.create();
-        mat4.perspective(projection, Math.PI/4, canvasWidth/canvasHeight, 0.1, 10);
+        mat4.perspective(projection, Math.PI/4, this.canvasManager.proportion, 0.1, 10);
 
         const view = camera.get_view();
 

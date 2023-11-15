@@ -1,25 +1,21 @@
 import { App } from "./control/app";
-import {canvasHeight, canvasWidth} from "./window_size";
+import {CanvasManager} from "./control/canvas-manager";
 
-const canvas : HTMLCanvasElement =
-    <HTMLCanvasElement> document.getElementById("gfx-main");
-
-canvas.setAttribute('width', canvasWidth.toString());
-canvas.setAttribute('height', canvasHeight.toString());
+const canvasManager = new CanvasManager();
 
 document.addEventListener(
-    "keydown",
-     async (e) => {
-        if (e.keyCode === 13) {
-            if (!document.fullscreenElement) {
+    'keydown',
+     async (event) => {
+        if (event.key === 'Enter') {
+            if (document.fullscreenElement) {
+                await document.exitFullscreen?.();
+            } else {
                 await document.documentElement.requestFullscreen();
-            } else if (document.exitFullscreen) {
-                await document.exitFullscreen();
             }
         }
     },
     false,
 );
 
-const app = new App(canvas);
+const app = new App(canvasManager);
 app.run();

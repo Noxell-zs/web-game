@@ -1,0 +1,24 @@
+{
+  "manifest_version": "1.0",
+  "version": "1.0",
+  "name": "",
+  "theme_color": "#260066",
+  "background_color": "#260066",
+
+  "short_name": "",
+  "description": "",
+  "categories": [],
+  "lang": "ru-Ru",
+
+  "display": "standalone",
+  "dir": "auto",
+  "orientation": "any",
+
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

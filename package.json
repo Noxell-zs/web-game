@@ -2,7 +2,6 @@
   "name": "webgpu_game",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "private": true,
   "author": "Noxell-zs",
   "scripts": {
@@ -11,12 +10,10 @@
     "serve": "http-server"
   },
   "dependencies": {
-    "gl-matrix": "^3.4.3",
-    "jquery": "^3.6.1"
+    "gl-matrix": "^3.4.3"
   },
   "devDependencies": {
     "@types/node": "^17.0.30",
-    "@types/jquery": "^3.5.14",
     "@webgpu/types": "^0.1.15",
     "http-server": "^14.1.0",
     "ts-loader": "^9.2.9",
