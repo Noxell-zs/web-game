@@ -21,6 +21,21 @@ export class App {
         this.forwards_amount = 0;
         this.right_amount = 0;
 
+
+        document.addEventListener(
+          'keydown',
+          async (event) => {
+              if (event.key === 'Enter') {
+                  if (document.fullscreenElement) {
+                      await document.exitFullscreen?.();
+                  } else {
+                      await document.documentElement.requestFullscreen();
+                  }
+              }
+          },
+          false,
+        );
+
         document.addEventListener(
             "keydown",
             (event) => this.handleKeypress(event.key),
