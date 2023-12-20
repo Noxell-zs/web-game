@@ -8,3 +8,59 @@ body {
     align-items: center;
     background-color: #260066;
 }
+
+main {
+    position: relative;
+}
+
+#menu {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.blur {
+    backdrop-filter: blur(5px);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+#start {
+    cursor: pointer;
+    padding: 1rem;
+    background-color: white;
+    color: #260066;
+    border-radius: 1rem;
+    font-weight: bold;
+    font-size: 2rem;
+    border: none;
+    box-shadow: 0 0 0.25rem white;
+    z-index: 1;
+}
+
+#health {
+    color: red;
+    left: 0.5rem;
+}
+
+#score {
+    color: green;
+    right: 0.5rem;
+}
+
+#health, #score {
+    position: absolute;
+    font-size: 2rem;
+    font-weight: bold;
+    top: 0.5rem;
+}
+
+#center {
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(240, 248, 255, 0.75);
+    position: absolute;
+}

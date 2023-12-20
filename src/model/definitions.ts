@@ -2,7 +2,8 @@ import { mat4 } from "gl-matrix";
 
 export enum object_types {
     TRIANGLE,
-    QUAD
+    QUAD,
+    STATUE,
 }
 
 export enum pipeline_types {

@@ -35,9 +35,9 @@ export class Renderer {
     depthStencilAttachment: GPURenderPassDepthStencilAttachment;
 
     // Assets
-    triangleMesh: TriangleMesh;
+    triangleMesh: ObjMesh;
     quadMesh: QuadMesh;
-    statueMesh: ObjMesh;
+    cubeMesh: ObjMesh;
     triangleMaterial: Material;
     quadMaterial: Material;
     objectBuffer: GPUBuffer;
@@ -270,10 +270,14 @@ export class Renderer {
     }
 
     async createAssets() {
-        this.triangleMesh = new TriangleMesh(this.device);
         this.quadMesh = new QuadMesh(this.device);
-        this.statueMesh = new ObjMesh();
-        await this.statueMesh.initialize(this.device, "static/models/statue.obj");
+
+        this.triangleMesh = new ObjMesh();
+        await this.triangleMesh.initialize(this.device, "static/models/parallelepiped.obj");
+
+        this.cubeMesh = new ObjMesh();
+        await this.cubeMesh.initialize(this.device, "static/models/cube.obj");
+
         this.triangleMaterial = new Material();
         this.quadMaterial = new Material();
 
@@ -435,7 +439,7 @@ export class Renderer {
         renderpass.setVertexBuffer(0, this.triangleMesh.buffer);
         renderpass.setBindGroup(1, this.triangleMaterial.bindGroup); 
         renderpass.draw(
-            3, renderables.object_counts[object_types.TRIANGLE], 
+            this.triangleMesh.vertexCount, renderables.object_counts[object_types.TRIANGLE],
             0, objects_drawn
         );
         objects_drawn += renderables.object_counts[object_types.TRIANGLE];
@@ -449,14 +453,24 @@ export class Renderer {
         );
         objects_drawn += renderables.object_counts[object_types.QUAD];
 
-        //Statue
-        renderpass.setVertexBuffer(0, this.statueMesh.buffer);
-        renderpass.setBindGroup(1, this.triangleMaterial.bindGroup); 
+        //Statues
+        renderpass.setVertexBuffer(0, this.cubeMesh.buffer);
+        renderpass.setBindGroup(1, this.triangleMaterial.bindGroup);
         renderpass.draw(
-            this.statueMesh.vertexCount, 1, 
-            0, objects_drawn
+          this.cubeMesh.vertexCount, renderables.object_counts[object_types.STATUE],
+          0, objects_drawn
         );
-        objects_drawn += 1;
+        objects_drawn += renderables.object_counts[object_types.STATUE];
+
+
+        //Cube
+        // renderpass.setVertexBuffer(0, this.statueMesh.buffer);
+        // renderpass.setBindGroup(1, this.triangleMaterial.bindGroup);
+        // renderpass.draw(
+        //     this.statueMesh.vertexCount, 1,
+        //     0, objects_drawn
+        // );
+        // objects_drawn += 1;
 
         renderpass.end();
     
