@@ -35,11 +35,14 @@ export class Renderer {
     depthStencilAttachment: GPURenderPassDepthStencilAttachment;
 
     // Assets
-    triangleMesh: ObjMesh;
+    parallelepipedMesh: ObjMesh;
     quadMesh: QuadMesh;
     cubeMesh: ObjMesh;
-    triangleMaterial: Material;
+
+    cubeMaterial: Material;
     quadMaterial: Material;
+    parallelepipedMaterial: Material;
+
     objectBuffer: GPUBuffer;
     parameterBuffer: GPUBuffer;
     skyMaterial: CubeMapMaterial;
@@ -215,7 +218,7 @@ export class Renderer {
                     code : shader
                 }),
                 entryPoint : "vs_main",
-                buffers: [this.triangleMesh.bufferLayout,]
+                buffers: [this.parallelepipedMesh.bufferLayout,]
             },
     
             fragment : {
@@ -272,13 +275,14 @@ export class Renderer {
     async createAssets() {
         this.quadMesh = new QuadMesh(this.device);
 
-        this.triangleMesh = new ObjMesh();
-        await this.triangleMesh.initialize(this.device, "static/models/parallelepiped.obj");
+        this.parallelepipedMesh = new ObjMesh();
+        await this.parallelepipedMesh.initialize(this.device, "static/models/parallelepiped.obj");
 
         this.cubeMesh = new ObjMesh();
         await this.cubeMesh.initialize(this.device, "static/models/cube.obj");
 
-        this.triangleMaterial = new Material();
+        this.cubeMaterial = new Material();
+        this.parallelepipedMaterial = new Material();
         this.quadMaterial = new Material();
 
         this.uniformBuffer = this.device.createBuffer({
@@ -300,7 +304,8 @@ export class Renderer {
             parameterBufferDescriptor
         );
 
-        await this.triangleMaterial.initialize(this.device, "static/img/obj.png", this.materialGroupLayout);
+        await this.cubeMaterial.initialize(this.device, "static/img/obj.png", this.materialGroupLayout);
+        await this.parallelepipedMaterial.initialize(this.device, "static/img/obj2.png", this.materialGroupLayout);
         await this.quadMaterial.initialize(this.device, "static/img/floor.png", this.materialGroupLayout);
 
         const urls = [
@@ -436,10 +441,10 @@ export class Renderer {
         var objects_drawn: number = 0;
 
         //Triangles
-        renderpass.setVertexBuffer(0, this.triangleMesh.buffer);
-        renderpass.setBindGroup(1, this.triangleMaterial.bindGroup); 
+        renderpass.setVertexBuffer(0, this.parallelepipedMesh.buffer);
+        renderpass.setBindGroup(1, this.parallelepipedMaterial.bindGroup);
         renderpass.draw(
-            this.triangleMesh.vertexCount, renderables.object_counts[object_types.TRIANGLE],
+            this.parallelepipedMesh.vertexCount, renderables.object_counts[object_types.TRIANGLE],
             0, objects_drawn
         );
         objects_drawn += renderables.object_counts[object_types.TRIANGLE];
@@ -455,7 +460,7 @@ export class Renderer {
 
         //Statues
         renderpass.setVertexBuffer(0, this.cubeMesh.buffer);
-        renderpass.setBindGroup(1, this.triangleMaterial.bindGroup);
+        renderpass.setBindGroup(1, this.cubeMaterial.bindGroup);
         renderpass.draw(
           this.cubeMesh.vertexCount, renderables.object_counts[object_types.STATUE],
           0, objects_drawn

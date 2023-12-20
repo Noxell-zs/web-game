@@ -30,7 +30,7 @@ main {
 #start {
     cursor: pointer;
     padding: 1rem;
-    background-color: white;
+    background-color: rgba(240, 248, 255, 0.75);
     color: #260066;
     border-radius: 1rem;
     font-weight: bold;
@@ -55,12 +55,15 @@ main {
     font-size: 2rem;
     font-weight: bold;
     top: 0.5rem;
+    background-color: rgba(240, 248, 255, 0.75);
+    padding: 0.5rem;
+    border-radius: 1rem;
 }
 
 #center {
     width: 6px;
     height: 6px;
     border-radius: 3px;
-    background: rgba(240, 248, 255, 0.75);
+    background-color: rgba(240, 248, 255, 0.75);
     position: absolute;
 }
