@@ -5,7 +5,7 @@ const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 const CopyPlugin = require("copy-webpack-plugin");
 
 
-const mode = 'development'; // production | development
+const mode = 'production'; // production | development
 
 module.exports = {
     mode,
