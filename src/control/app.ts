@@ -1,6 +1,7 @@
 import { Renderer } from "../view/renderer";
 import { Scene } from "../model/scene";
 import {CanvasManager} from "./canvas-manager";
+import { Kick } from "./audio";
 
 export class App {
   canvas: HTMLCanvasElement;
@@ -9,6 +10,9 @@ export class App {
 
   forwards_amount: number;
   right_amount: number;
+
+  context = new AudioContext;
+  targetTime = 0;
 
   constructor(canvasManager: CanvasManager) {
     this.canvas = canvasManager.canvas;
@@ -43,7 +47,11 @@ export class App {
       "click",
       (event) => {
         this.canvas.requestPointerLock();
-        this.scene.click();
+
+        const diff = this.context.currentTime - this.targetTime;
+        if (diff < 0.1 || diff > 0.52) {
+          this.scene.click();
+        }
       },
     );
 
@@ -60,6 +68,12 @@ export class App {
     this.canvas.addEventListener(
       "mousemove",
       (event: MouseEvent) => this.handle_mouse_move(event)
+    );
+
+    const kick = new Kick(this.context);
+    const interval = setInterval(
+      () => kick.trigger(this.targetTime = this.context.currentTime),
+      550
     );
   }
 
