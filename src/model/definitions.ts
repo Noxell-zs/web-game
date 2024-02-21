@@ -4,6 +4,7 @@ export enum object_types {
     TRIANGLE,
     QUAD,
     STATUE,
+    PARALLELEPIPED
 }
 
 export enum pipeline_types {

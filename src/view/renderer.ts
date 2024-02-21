@@ -36,12 +36,14 @@ export class Renderer {
 
     // Assets
     parallelepipedMesh: ObjMesh;
+    parallelepiped2Mesh: ObjMesh;
     quadMesh: QuadMesh;
     cubeMesh: ObjMesh;
 
     cubeMaterial: Material;
     quadMaterial: Material;
     parallelepipedMaterial: Material;
+    parallelepiped2Material: Material;
 
     objectBuffer: GPUBuffer;
     parameterBuffer: GPUBuffer;
@@ -218,7 +220,9 @@ export class Renderer {
                     code : shader
                 }),
                 entryPoint : "vs_main",
-                buffers: [this.parallelepipedMesh.bufferLayout,]
+                buffers: [
+                  this.parallelepipedMesh.bufferLayout,
+                ]
             },
     
             fragment : {
@@ -278,11 +282,15 @@ export class Renderer {
         this.parallelepipedMesh = new ObjMesh();
         await this.parallelepipedMesh.initialize(this.device, "static/models/parallelepiped.obj");
 
+        this.parallelepiped2Mesh = new ObjMesh();
+        await this.parallelepiped2Mesh.initialize(this.device, "static/models/parallelepiped2.obj");
+
         this.cubeMesh = new ObjMesh();
         await this.cubeMesh.initialize(this.device, "static/models/cube.obj");
 
         this.cubeMaterial = new Material();
         this.parallelepipedMaterial = new Material();
+        this.parallelepiped2Material = new Material();
         this.quadMaterial = new Material();
 
         this.uniformBuffer = this.device.createBuffer({
@@ -306,6 +314,7 @@ export class Renderer {
 
         await this.cubeMaterial.initialize(this.device, "static/img/obj.png", this.materialGroupLayout);
         await this.parallelepipedMaterial.initialize(this.device, "static/img/obj2.png", this.materialGroupLayout);
+        await this.parallelepiped2Material.initialize(this.device, "static/img/obj2.png", this.materialGroupLayout);
         await this.quadMaterial.initialize(this.device, "static/img/floor.png", this.materialGroupLayout);
 
         const urls = [
@@ -448,6 +457,15 @@ export class Renderer {
             0, objects_drawn
         );
         objects_drawn += renderables.object_counts[object_types.TRIANGLE];
+
+        // Parallelepipeds
+        renderpass.setVertexBuffer(0, this.parallelepiped2Mesh.buffer);
+        renderpass.setBindGroup(1, this.parallelepiped2Material.bindGroup);
+        renderpass.draw(
+            this.parallelepiped2Mesh.vertexCount, renderables.object_counts[object_types.PARALLELEPIPED],
+            0, objects_drawn
+        );
+        objects_drawn += renderables.object_counts[object_types.PARALLELEPIPED];
 
         //Triangles
         renderpass.setVertexBuffer(0, this.quadMesh.buffer);

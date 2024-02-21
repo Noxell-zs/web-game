@@ -74,7 +74,7 @@ module.exports = {
     },
     devServer: {
         port: 8000,
-        open: true,
+        open: false,
         hot: true,
         liveReload: true,
     },

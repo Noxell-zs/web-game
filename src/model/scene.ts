@@ -12,11 +12,13 @@ export class Scene {
   triangles: Set<Triangle>;
   quads: Quad[];
   cubes: Set<Cube>;
+  parallelepipeds: Triangle[];
   player: Camera;
   object_data: Float32Array;
   triangle_count: number;
   quad_count: number;
   statue_count: number;
+  parallelepiped_count: number;
 
   score: number;
   health: number;
@@ -43,6 +45,15 @@ export class Scene {
     this.health = 100;
     this.scoreEl = document.getElementById('score') as HTMLSpanElement;
     this.healthEl = document.getElementById('health') as HTMLSpanElement;
+
+    this.parallelepipeds = [
+      new Triangle([2, 1, 0.5], this.player),
+      new Triangle([-4, 1, 0.5], this.player),
+      new Triangle([-4, -1, 0.5], this.player),
+      new Triangle([2, -1, 0.5], this.player),
+    ];
+    this.parallelepiped_count = this.parallelepipeds.length;
+
   }
 
   click(): void {
@@ -157,6 +168,17 @@ export class Scene {
       }
     );
 
+    this.parallelepipeds.forEach(
+      (triangle) => {
+        triangle.update();
+        let model = triangle.get_model();
+        for (let j: number = 0; j < 16; j++) {
+          this.object_data[16 * i + j] = <number>model.at(j);
+        }
+        i++;
+      }
+    );
+
     this.quads.forEach(
       (quad) => {
         quad.update();
@@ -190,6 +212,7 @@ export class Scene {
         [object_types.TRIANGLE]: this.triangle_count,
         [object_types.QUAD]: this.quad_count,
         [object_types.STATUE]: this.statue_count,
+        [object_types.PARALLELEPIPED]: this.parallelepiped_count,
       }
     }
   }
@@ -207,18 +230,36 @@ export class Scene {
   }
 
   move_player(forwards_amount: number, right_amount: number) {
+    const tempPosition = [...this.player.position] as vec3;
+
     vec3.scaleAndAdd(
-      this.player.position, this.player.position,
+      tempPosition, tempPosition,
       this.player.baseForwards, forwards_amount
     );
 
     vec3.scaleAndAdd(
-      this.player.position, this.player.position,
+      tempPosition, tempPosition,
       this.player.right, right_amount
     );
 
-    this.player.position[0] = Math.min(maxCoord, Math.max(minCoord, this.player.position[0]));
-    this.player.position[1] = Math.min(maxCoord, Math.max(minCoord, this.player.position[1]));
+    for (const parallelepiped of this.parallelepipeds) {
+      if (
+        Math.abs(tempPosition[1] - parallelepiped.position[1]) <= 1.25
+        && (
+          Math.abs(tempPosition[0] - parallelepiped.position[0]) <= 0.35 || (
+            (tempPosition[0] - parallelepiped.position[0]) *
+            (this.player.position[0] - parallelepiped.position[0])
+          ) < 0
+        )
+      ) {
+        tempPosition[1] = this.player.position[1];
+        tempPosition[0] = this.player.position[0];
+        break;
+      }
+    }
+
+    this.player.position[0] = Math.min(maxCoord, Math.max(minCoord, tempPosition[0]));
+    this.player.position[1] = Math.min(maxCoord, Math.max(minCoord, tempPosition[1]));
 
   }
 }
