@@ -96,16 +96,16 @@ export class App {
   handleKeypress(key: string) {
     switch (key) {
       case 'w':
-        this.forwards_amount = 0.05;
+        this.forwards_amount = 0.06;
         break;
       case 's':
-        this.forwards_amount = -0.05;
+        this.forwards_amount = -0.06;
         break;
       case 'a':
-        this.right_amount = -0.03;
+        this.right_amount = -0.04;
         break;
       case 'd':
-        this.right_amount = 0.03;
+        this.right_amount = 0.04;
         break;
     }
   }

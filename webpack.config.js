@@ -3,6 +3,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 const CopyPlugin = require("copy-webpack-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 
 
 const mode = 'production'; // production | development
@@ -19,16 +20,19 @@ module.exports = {
         clean: true,
     },
     optimization: {
+        minimize: true,
         splitChunks: {
             chunks: 'all',
         },
         minimizer: [
             new CssMinimizerPlugin(),
+            new TerserPlugin(),
         ],
     },
     plugins: [
         new HtmlWebpackPlugin({
             template: './index.html',
+            minify: true,
         }),
         new MiniCssExtractPlugin({
             filename: '[name].[contenthash].css',

@@ -85,7 +85,7 @@ export class Renderer {
         //Function calls are made through the device
         this.device = <GPUDevice> await this.adapter?.requestDevice();
         //context: similar to vulkan instance (or OpenGL context)
-        this.context = <GPUCanvasContext> this.canvas.getContext("webgpu");
+        this.context = this.canvas.getContext("webgpu") as unknown as GPUCanvasContext;
         this.format = "bgra8unorm";
         this.context.configure({
             device: this.device,

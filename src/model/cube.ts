@@ -24,7 +24,7 @@ export class Cube {
         ];
         vec3.scaleAndAdd(
           this.position, this.position,
-          this.baseForwards, 0.1
+          this.baseForwards, 0.2
         );
         mat4.translate(this.model, this.model, this.position);
 

@@ -23,8 +23,8 @@ export class Triangle {
         this.model = mat4.create();
 
         this.position = [
-          this.position[0] * 0.995 + this.player.position[0] * 0.005,
-          this.position[1] * 0.995 + this.player.position[1] * 0.005,
+          this.position[0] * 0.980 + this.player.position[0] * 0.020,
+          this.position[1] * 0.980 + this.player.position[1] * 0.020,
           0.5
         ];
 
