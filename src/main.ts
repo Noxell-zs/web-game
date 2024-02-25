@@ -9,6 +9,8 @@ document.getElementById('start')
   ?.addEventListener('click', (event) => {
     app.run();
     app.activateControls();
-    document.getElementById('menu')?.classList.remove('blur');
+    document.getElementById('hud')?.classList.remove('blur');
+
+    document.getElementById('menu')?.remove?.();
     (event.target as any).remove?.();
   });

@@ -21,7 +21,7 @@ export class Kick {
     this.circle.style.borderColor = 'orange';
     this.setup();
 
-    this.osc!.frequency.setValueAtTime(100+(Math.random()*170), time);
+    this.osc!.frequency.setValueAtTime(200, time);
     this.gain!.gain.setValueAtTime(0.5, time);
 
     this.osc!.frequency.exponentialRampToValueAtTime(1, time + 0.5);

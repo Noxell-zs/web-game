@@ -3,6 +3,59 @@ import { Scene } from "../model/scene";
 import {CanvasManager} from "./canvas-manager";
 import { Kick } from "./audio";
 
+
+function getPeaks(buffer: AudioBuffer): Promise<number[]> {
+  const offlineContext = new OfflineAudioContext(1, buffer.length, buffer.sampleRate);
+  const source = offlineContext.createBufferSource();
+  source.buffer = buffer;
+  const filter = offlineContext.createBiquadFilter();
+  filter.type = "lowpass";
+  source.connect(filter);
+  filter.connect(offlineContext.destination);
+  source.start(0);
+  offlineContext.startRendering();
+
+  return new Promise((resolve, reject) =>
+    offlineContext.oncomplete = (e) => {
+      const filteredBuffer = e.renderedBuffer;
+      const data = filteredBuffer.getChannelData(0);
+
+      const peaksArray: number[] = [];
+
+      const block = filteredBuffer.sampleRate * 3;
+
+      [...(range(0, filteredBuffer.length, block))].map(
+        x => data.slice(x, x + block)
+      ).forEach((blockElement, blockIndex) => {
+        const max = blockElement.reduce((a,b) => a > b ? a : b);
+        const min = blockElement.reduce((a, b) => a < b ? a : b);
+        const threshold = min + (max - min) * 0.75;
+
+        const {length} = blockElement;
+        for (let i = 0; i < length;) {
+          if (blockElement[i] > threshold) {
+            peaksArray.push(i + blockIndex*length);
+            // Skip forward ~ 1/4s to get past this peak.
+            i += 10000;
+          }
+          i++;
+        }
+      });
+
+      return resolve(peaksArray)
+   });
+}
+
+function* range(
+  start: number,
+  stop: number,
+  step: number = 1
+) {
+  for (; start <= stop; start += step) {
+    yield start;
+  }
+}
+
 export class App {
   canvas: HTMLCanvasElement;
   renderer: Renderer;
@@ -12,7 +65,10 @@ export class App {
   right_amount: number;
 
   context = new AudioContext;
-  targetTime = 0;
+  buffer?: AudioBuffer;
+  peaks?: Promise<number[]>;
+
+  targetTime = [0, 0];
 
   constructor(canvasManager: CanvasManager) {
     this.canvas = canvasManager.canvas;
@@ -24,6 +80,22 @@ export class App {
 
     this.forwards_amount = 0;
     this.right_amount = 0;
+
+    const appContext = this;
+    document.getElementById('audioFile')!.onchange = function() {
+      const file = (this as HTMLInputElement).files![0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        appContext.context.decodeAudioData(
+          reader.result as ArrayBuffer,
+          (buffer) => {
+            appContext.buffer = buffer;
+            appContext.peaks = getPeaks(buffer);
+          }
+        );
+      };
+      reader.readAsArrayBuffer(file);
+    };
   }
 
   activateControls(): void {
@@ -48,8 +120,12 @@ export class App {
       (event) => {
         this.canvas.requestPointerLock();
 
-        const diff = this.context.currentTime - this.targetTime;
-        if (diff < 0.1 || diff > 0.52) {
+        const {currentTime} = this.context;
+        const diff = Math.min(
+          currentTime - this.targetTime[0],
+          this.targetTime[1] - currentTime
+        );
+        if (diff < 0.1) {
           this.scene.click();
         }
       },
@@ -71,10 +147,45 @@ export class App {
     );
 
     const kick = new Kick(this.context);
-    const interval = setInterval(
-      () => kick.trigger(this.targetTime = this.context.currentTime),
-      550
-    );
+
+    if (this.buffer) {
+      const {sampleRate} = this.buffer!;
+      let i = 0;
+
+      this.peaks?.then(peaks => {
+        let cursor = peaks.shift()!;
+        const interval = setInterval(() => {
+          while (i >= cursor) {
+            const {currentTime} = this.context;
+            this.targetTime[0] = currentTime;
+            this.targetTime[1] = currentTime + ((peaks[0] || 0) - cursor) / sampleRate;
+
+            kick.trigger(currentTime);
+            cursor = peaks.shift()!;
+          }
+          i += sampleRate / 8;
+
+          if (!peaks.length) {
+            clearInterval(interval);
+          }
+        }, 1000 / 8);
+
+        let source = this.context.createBufferSource();
+        source.buffer = this.buffer!;
+        source.connect(this.context.destination);
+        source.start(this.context.currentTime + 1/8);
+      });
+
+    } else {
+      setInterval(() => {
+        const {currentTime} = this.context;
+        this.targetTime[0] = currentTime;
+        this.targetTime[1] = currentTime + 0.55;
+
+        kick.trigger(currentTime)
+      }, 550);
+    }
+
   }
 
   run = () => {

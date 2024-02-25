@@ -14,12 +14,15 @@
 <body>
     <main>
         <canvas id="gfx-main" width="1280" height="720"></canvas>
-        <div id="menu" class="blur">
+        <div id="hud" class="blur">
             <span id="health">100</span>
             <span id="score">0</span>
             <div id="center"></div>
             <div id="circle"></div>
-            <button id="start">Старт</button>
+            <div id="menu">
+                <button id="start">Старт</button>
+                <input id="audioFile" type="file" accept="audio/*"/>
+            </div>
         </div>
     </main>
 

@@ -13,11 +13,22 @@ main {
     position: relative;
 }
 
+#hud {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 #menu {
     position: absolute;
     inset: 0;
 
     display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
     justify-content: center;
     align-items: center;
 }
