@@ -9,6 +9,8 @@
     "build": "webpack"
   },
   "dependencies": {
+    "@magenta/music": "^1.23.1",
+    "buffer": "^6.0.3",
     "gl-matrix": "^3.4.3"
   },
   "devDependencies": {

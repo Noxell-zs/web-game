@@ -2,6 +2,8 @@ import { Renderer } from "../view/renderer";
 import { Scene } from "../model/scene";
 import {CanvasManager} from "./canvas-manager";
 import { Kick } from "./audio";
+import {generate, initialize} from "./generate-rnn";
+import {Player} from "@magenta/music";
 
 
 function getPeaks(buffer: AudioBuffer): Promise<number[]> {
@@ -122,8 +124,8 @@ export class App {
 
         const {currentTime} = this.context;
         const diff = Math.min(
-          currentTime - this.targetTime[0],
-          this.targetTime[1] - currentTime
+          Math.abs(currentTime - this.targetTime[0]),
+          Math.abs(this.targetTime[1] - currentTime)
         );
         if (diff < 0.1) {
           this.scene.click();
@@ -177,13 +179,41 @@ export class App {
       });
 
     } else {
-      setInterval(() => {
-        const {currentTime} = this.context;
-        this.targetTime[0] = currentTime;
-        this.targetTime[1] = currentTime + 0.55;
+      const tempo = Math.floor(Math.random()*140) + 80;
 
-        kick.trigger(currentTime)
-      }, 550);
+      const action = () => generate().then(seq => {
+        const coef = 60 / tempo / seq.quantizationInfo.stepsPerQuarter;
+
+        const arr = [...new Set(seq.notes.map(
+          note => note.quantizedStartStep!
+        ))].sort();
+
+        arr.forEach((item, index) => setTimeout(() => {
+          const {currentTime} = this.context;
+          this.targetTime[0] = currentTime;
+          this.targetTime[1] = currentTime + coef * ((arr[index+1] || item) - item);
+          kick.trigger(currentTime);
+
+        }, 1000 * item*coef));
+
+        player.start(seq, tempo);
+      });
+
+      const player = new Player(false, {
+        run: (note) => null,
+        stop: action
+      });
+      player.stop();
+
+      initialize().then(() => action());
+
+      // setInterval(() => {
+      //   const {currentTime} = this.context;
+      //   this.targetTime[0] = currentTime;
+      //   this.targetTime[1] = currentTime + 0.55;
+      //
+      //   kick.trigger(currentTime)
+      // }, 550);
     }
 
   }
