@@ -20,19 +20,19 @@ export class Triangle {
     }
 
     update() {
-        // this.eulers[2] += 1;
-        // this.eulers[2] %= 360;
-        //
-        // this.model = mat4.create();
-        //
-        // this.position = [
-        //   this.position[0] * 0.980 + this.player.position[0] * 0.020,
-        //   this.position[1] * 0.980 + this.player.position[1] * 0.020,
-        //   0.5
-        // ];
-        //
-        // mat4.translate(this.model, this.model, this.position);
-        // mat4.rotateZ(this.model, this.model, Deg2Rad(this.eulers[2]));
+        this.eulers[2] += 1;
+        this.eulers[2] %= 360;
+
+        this.model = mat4.create();
+
+        this.position = [
+          this.position[0] * 0.980 + this.player.position[0] * 0.020,
+          this.position[1] * 0.980 + this.player.position[1] * 0.020,
+          0.5
+        ];
+
+        mat4.translate(this.model, this.model, this.position);
+        mat4.rotateZ(this.model, this.model, Deg2Rad(this.eulers[2]));
     }
 
     get_model(): mat4 {

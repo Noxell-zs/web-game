@@ -170,7 +170,7 @@ export class Scene {
 
     this.parallelepipeds.forEach(
       (triangle) => {
-        triangle.update();
+        // triangle.update();
         let model = triangle.get_model();
         for (let j: number = 0; j < 16; j++) {
           this.object_data[16 * i + j] = <number>model.at(j);
