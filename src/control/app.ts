@@ -2,8 +2,6 @@ import { Renderer } from "../view/renderer";
 import { Scene } from "../model/scene";
 import {CanvasManager} from "./canvas-manager";
 import { Kick } from "./audio";
-import {generate, initialize} from "./generate-rnn";
-import {Player} from "@magenta/music";
 
 
 function getPeaks(buffer: AudioBuffer): Promise<number[]> {
@@ -71,6 +69,7 @@ export class App {
   peaks?: Promise<number[]>;
 
   targetTime = [0, 0];
+  previousTouch: Touch | null;
 
   constructor(canvasManager: CanvasManager) {
     this.canvas = canvasManager.canvas;
@@ -101,8 +100,12 @@ export class App {
   }
 
   activateControls(): void {
-    document.addEventListener(
-      'keydown',
+    const urlParams = new URLSearchParams(window.location.search);
+
+    const hud = document.getElementById('hud')!;
+
+    addEventListener(
+      "keydown",
       async (event) => {
         if (event.key === 'Enter') {
           this.canvas.requestPointerLock();
@@ -112,33 +115,12 @@ export class App {
           } else {
             await document.documentElement.requestFullscreen();
           }
+        } else {
+          this.handleKeypress(event.key)
         }
       },
     );
-
-
-    document.addEventListener(
-      "click",
-      (event) => {
-        this.canvas.requestPointerLock();
-
-        const {currentTime} = this.context;
-        const diff = Math.min(
-          Math.abs(currentTime - this.targetTime[0]),
-          Math.abs(this.targetTime[1] - currentTime)
-        );
-        if (diff < 0.1) {
-          this.scene.click();
-        }
-      },
-    );
-
-    document.addEventListener(
-      "keydown",
-      (event) => this.handleKeypress(event.key),
-    );
-
-    document.addEventListener(
+    addEventListener(
       "keyup",
       (event) => this.handleKeyrelease(event.key),
     );
@@ -147,6 +129,102 @@ export class App {
       "mousemove",
       (event: MouseEvent) => this.handle_mouse_move(event)
     );
+
+    const attack = () => {
+      const {currentTime} = this.context;
+      const diff = Math.min(
+        Math.abs(currentTime - this.targetTime[0]),
+        Math.abs(this.targetTime[1] - currentTime)
+      );
+      if (diff < 0.1) {
+        this.scene.click();
+      }
+    };
+
+
+    if (urlParams.has('mobile')) {
+      document.documentElement.requestFullscreen();
+
+      const attackBtn = document.getElementById('attack-btn')!;
+      const moveControl = document.getElementById('move-control')!;
+
+      attackBtn.removeAttribute('hidden');
+      moveControl.removeAttribute('hidden');
+
+      hud.addEventListener("touchmove", (event: TouchEvent) => {
+        event.stopPropagation();
+        const touch = event.touches[0];
+
+        if (this.previousTouch) {
+          this.scene.spin_player(
+            (touch.pageX - this.previousTouch.pageX) / 5,
+            (touch.pageY - this.previousTouch.pageY) / 5
+          );
+        }
+
+        this.previousTouch = touch;
+      });
+      hud.addEventListener("touchend", (e) =>
+        this.previousTouch = null
+      );
+
+      attackBtn.addEventListener(
+        "touchstart",
+        (event: TouchEvent) => {
+          event.stopPropagation();
+          attack();
+        }
+      );
+
+      let rect: DOMRect,
+        centerBottom: number,
+        centerTop: number,
+        centerLeft: number,
+        centerRight: number;
+
+      const setCenter = () => {
+        rect = moveControl.getBoundingClientRect();
+        centerBottom = (rect.top + rect.bottom * 2) / 3;
+        centerTop = (rect.top * 2 + rect.bottom) / 3;
+        centerLeft = (rect.right + rect.left * 2) / 3;
+        centerRight = (rect.right * 2 + rect.left) / 3;
+      };
+
+      setCenter();
+      addEventListener('resize', setCenter);
+
+      for (const eventType of ["touchmove", "touchstart"] as const) {
+        moveControl.addEventListener(eventType, (event: TouchEvent) => {
+          event.stopPropagation();
+          const touch = event.touches[0];
+
+          if (touch.pageY >= centerBottom) {
+            this.forwards_amount = -0.06;
+          }
+          if (touch.pageY <= centerTop) {
+            this.forwards_amount = 0.06;
+          }
+          if (touch.pageX >= centerRight) {
+            this.right_amount = 0.04;
+          }
+          if (touch.pageX <= centerLeft) {
+            this.right_amount = -0.04;
+          }
+        });
+      }
+      for (const eventType of ["touchend", "touchcancel"] as const) {
+        moveControl.addEventListener(eventType, (event: TouchEvent) => {
+          this.forwards_amount = 0;
+          this.right_amount = 0;
+        });
+      }
+
+    } else {
+      hud.addEventListener("click", (event: MouseEvent) => {
+        this.canvas.requestPointerLock();
+        attack();
+      });
+    }
 
     const kick = new Kick(this.context);
 
@@ -179,41 +257,41 @@ export class App {
       });
 
     } else {
-      const tempo = Math.floor(Math.random()*140) + 80;
-
-      const action = () => generate().then(seq => {
-        const coef = 60 / tempo / seq.quantizationInfo.stepsPerQuarter;
-
-        const arr = [...new Set(seq.notes.map(
-          note => note.quantizedStartStep!
-        ))].sort();
-
-        arr.forEach((item, index) => setTimeout(() => {
-          const {currentTime} = this.context;
-          this.targetTime[0] = currentTime;
-          this.targetTime[1] = currentTime + coef * ((arr[index+1] || item) - item);
-          kick.trigger(currentTime);
-
-        }, 1000 * item*coef));
-
-        player.start(seq, tempo);
-      });
-
-      const player = new Player(false, {
-        run: (note) => null,
-        stop: action
-      });
-      player.stop();
-
-      initialize().then(() => action());
-
-      // setInterval(() => {
-      //   const {currentTime} = this.context;
-      //   this.targetTime[0] = currentTime;
-      //   this.targetTime[1] = currentTime + 0.55;
+      // const tempo = Math.floor(Math.random()*140) + 80;
       //
-      //   kick.trigger(currentTime)
-      // }, 550);
+      // const action = () => generate().then(seq => {
+      //   const coef = 60 / tempo / seq.quantizationInfo.stepsPerQuarter;
+      //
+      //   const arr = [...new Set(seq.notes.map(
+      //     note => note.quantizedStartStep!
+      //   ))].sort();
+      //
+      //   arr.forEach((item, index) => setTimeout(() => {
+      //     const {currentTime} = this.context;
+      //     this.targetTime[0] = currentTime;
+      //     this.targetTime[1] = currentTime + coef * ((arr[index+1] || item) - item);
+      //     kick.trigger(currentTime);
+      //
+      //   }, 1000 * item*coef));
+      //
+      //   player.start(seq, tempo);
+      // });
+      //
+      // const player = new Player(false, {
+      //   run: (note) => null,
+      //   stop: action
+      // });
+      // player.stop();
+      //
+      // initialize().then(() => action());
+
+      setInterval(() => {
+        const {currentTime} = this.context;
+        this.targetTime[0] = currentTime;
+        this.targetTime[1] = currentTime + 0.55;
+
+        kick.trigger(currentTime)
+      }, 550);
     }
 
   }
